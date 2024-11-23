@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 class SplashScreen extends StatelessWidget {
-  const SplashScreen({Key? key}) : super(key: key);
+  const SplashScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -12,22 +12,10 @@ class SplashScreen extends StatelessWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Expanded(
-                child: Center(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Image.asset(
-                      'images/im1.png',
-                        width: 350,
-                        height: 200,
-                      ),
-                      //const SizedBox(height: 10),
-                     
-                      
-                    ],
-                  ),
-                ),
+              Image.asset(
+                'images/im1.png', // Assurez-vous que le chemin de l'image est correct
+                width: 350,
+                height: 200,
               ),
               Padding(
                 padding: const EdgeInsets.all(32.0),
