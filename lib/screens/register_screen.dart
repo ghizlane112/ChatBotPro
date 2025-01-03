@@ -1,6 +1,6 @@
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -10,7 +10,6 @@ class RegisterScreen extends StatefulWidget {
 }
 
 class _RegisterScreenState extends State<RegisterScreen> {
-  final _auth = FirebaseAuth.instance;
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
@@ -33,23 +32,36 @@ class _RegisterScreenState extends State<RegisterScreen> {
     }
 
     try {
-      // Create user with Firebase Auth
-      UserCredential userCredential = await _auth.createUserWithEmailAndPassword(
-        email: _emailController.text,
-        password: _passwordController.text,
+      // URL de votre API backend
+      const String url = 'http://10.0.2.2:8000/api/users/sync/';
+
+      final response = await http.post(
+        Uri.parse(url),
+       headers: {'Content-Type': 'application/json'},
+       body: json.encode({
+    'name': _nameController.text,
+    'email': _emailController.text,
+    'password': _passwordController.text,
+  }),
       );
 
-      // Store additional user data in Firestore
-      await FirebaseFirestore.instance.collection('users').doc(userCredential.user!.uid).set({
-        'name': _nameController.text,
-        'email': _emailController.text,
-      });
+      final data = json.decode(response.body);
 
-      // Redirect to login screen
-      Navigator.pushReplacementNamed(context, '/login');
-    } on FirebaseAuthException catch (e) {
+      if (response.statusCode == 200 && data['success'] == true) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Registration successful')),
+        );
+
+        // Rediriger vers la page de connexion
+        Navigator.pushReplacementNamed(context, '/login');
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(data['message'] ?? 'An error occurred')),
+        );
+      }
+    } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(e.message ?? 'An error occurred')),
+        SnackBar(content: Text('Error: $e')),
       );
     } finally {
       setState(() {

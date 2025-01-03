@@ -1,20 +1,21 @@
 import 'package:flutter/material.dart';
+import 'chat.dart';
 import 'screens/splash_screen.dart';
 import 'screens/login_screen.dart';
 import 'screens/register_screen.dart';
 
 // Imports Firebase
-import 'package:firebase_core/firebase_core.dart';
-import 'firebase_options.dart';
+//import 'package:firebase_core/firebase_core.dart';
+//import 'firebase_options.dart';
 
 void main() async {
   // Assurez-vous que les widgets Flutter sont initialisés
-  WidgetsFlutterBinding.ensureInitialized();
+ // WidgetsFlutterBinding.ensureInitialized();
 
   // Initialisation de Firebase
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
+ // await Firebase.initializeApp(
+   // options: DefaultFirebaseOptions.currentPlatform,
+ // );
 
   // Lancement de l'application
   runApp(const MyApp());
@@ -34,8 +35,9 @@ class MyApp extends StatelessWidget {
       initialRoute: '/',
       routes: {
         '/': (context) => const SplashScreen(),
-        '/login': (context) => const LoginScreen(),
+        '/login': (context) => const LoginPage(),
         '/register': (context) => const RegisterScreen(),
+        '/chat': (context) => const ChatScreen(), // Ajoutez cette route
         // Assurez-vous de définir la route pour '/home' ou un autre écran
       },
     );

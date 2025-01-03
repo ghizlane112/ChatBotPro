@@ -1,15 +1,15 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
-class LoginScreen extends StatefulWidget {
-  const LoginScreen({super.key});
+class LoginPage extends StatefulWidget {
+  const LoginPage({super.key});
 
   @override
-  _LoginScreenState createState() => _LoginScreenState();
+  _LoginPageState createState() => _LoginPageState();
 }
 
-class _LoginScreenState extends State<LoginScreen> {
-  final _auth = FirebaseAuth.instance;
+class _LoginPageState extends State<LoginPage> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _isLoading = false;
@@ -20,17 +20,39 @@ class _LoginScreenState extends State<LoginScreen> {
     });
 
     try {
-      // Connexion via Firebase Auth
-      await _auth.signInWithEmailAndPassword(
-        email: _emailController.text,
-        password: _passwordController.text,
+      const String url = 'http://10.0.2.2:8000/api/users/login/';
+
+      final response = await http.post(
+        Uri.parse(url),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: json.encode({
+          'email': _emailController.text,
+          'password': _passwordController.text,
+        }),
       );
 
-      // Rediriger l'utilisateur vers l'écran principal ou un autre écran
-      Navigator.pushReplacementNamed(context, '/home');
-    } on FirebaseAuthException catch (e) {
+      if (response.body.isEmpty) {
+        throw Exception('Response body is empty');
+      }
+
+      final data = json.decode(response.body);
+
+      if (response.statusCode == 200 && data['success'] == true) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Login successful')),
+        );
+
+        Navigator.pushReplacementNamed(context, '/chat');
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(data['message'] ?? 'Invalid credentials')),
+        );
+      }
+    } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(e.message ?? 'An error occurred')),
+        SnackBar(content: Text('Error: $e')),
       );
     } finally {
       setState(() {
@@ -42,56 +64,62 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF0A192F),
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(24.0),
+      appBar: AppBar(
+        title: const Text('Login'),
+        backgroundColor: Colors.teal,
+        elevation: 0,
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(24.0),
+        child: Center(
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
             children: [
-              const SizedBox(height: 40),
               const Text(
-                'Login',
+                'Login to your account',
                 style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 32,
-                  fontWeight: FontWeight.bold,
+                  fontSize: 22,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.black87,
                 ),
               ),
               const SizedBox(height: 40),
-              _buildTextField('Email', controller: _emailController),
-              const SizedBox(height: 16),
-              _buildTextField('Password', isPassword: true, controller: _passwordController),
-              const SizedBox(height: 24),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: _isLoading ? null : _loginUser,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF7C3AED),
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(30),
-                    ),
-                  ),
-                  child: _isLoading
-                      ? const CircularProgressIndicator(color: Colors.white)
-                      : const Text(
-                          'Login',
-                          style: TextStyle(fontSize: 18),
-                        ),
-                ),
+              _buildTextField(
+                label: 'Email',
+                icon: Icons.email,
+                controller: _emailController,
               ),
               const SizedBox(height: 16),
-              Center(
-                child: TextButton(
-                  onPressed: () {
-                    Navigator.pushNamed(context, '/register');
-                  },
-                  child: const Text(
-                    'Don\'t have an account? Register',
-                    style: TextStyle(color: Colors.white),
+              _buildTextField(
+                label: 'Password',
+                icon: Icons.lock,
+                obscureText: true,
+                controller: _passwordController,
+              ),
+              const SizedBox(height: 32),
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.teal,
+                  padding: const EdgeInsets.symmetric(horizontal: 100, vertical: 15),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(30),
                   ),
+                ),
+                onPressed: _isLoading ? null : _loginUser,
+                child: _isLoading
+                    ? const CircularProgressIndicator(color: Colors.white)
+                    : const Text(
+                  'Login',
+                  style: TextStyle(fontSize: 18, color: Colors.white),
+                ),
+              ),
+              TextButton(
+                onPressed: () {
+                  Navigator.pushReplacementNamed(context, '/register');
+                },
+                child: const Text(
+                  'Don\'t have an account? Register',
+                  style: TextStyle(color: Colors.teal),
                 ),
               ),
             ],
@@ -101,20 +129,26 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  Widget _buildTextField(String label, {bool isPassword = false, TextEditingController? controller}) {
+  Widget _buildTextField({
+    required String label,
+    required IconData icon,
+    bool obscureText = false,
+    TextEditingController? controller,
+  }) {
     return TextField(
-      obscureText: isPassword,
+      obscureText: obscureText,
       controller: controller,
-      style: const TextStyle(color: Colors.white),
       decoration: InputDecoration(
         labelText: label,
-        labelStyle: const TextStyle(color: Colors.white70),
-        enabledBorder: const OutlineInputBorder(
-          borderSide: BorderSide(color: Colors.white30),
+        labelStyle: TextStyle(color: Colors.grey.shade600),
+        filled: true,
+        fillColor: Colors.grey.shade100,
+        prefixIcon: Icon(icon, color: Colors.teal),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(30),
+          borderSide: BorderSide.none,
         ),
-        focusedBorder: const OutlineInputBorder(
-          borderSide: BorderSide(color: Color(0xFF7C3AED)),
-        ),
+        contentPadding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
       ),
     );
   }
