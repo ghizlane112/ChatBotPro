@@ -20,7 +20,7 @@ class _LoginPageState extends State<LoginPage> {
     });
 
     try {
-      const String url = 'http://10.0.2.2:8000/api/users/login/';
+      const String url = 'http://192.168.1.10:8000/api/users/login/';
 
       final response = await http.post(
         Uri.parse(url),
