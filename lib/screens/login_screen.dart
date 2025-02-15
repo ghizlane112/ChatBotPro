@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+//import 'package:shared_preferences/shared_preferences.dart';
+
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -20,7 +22,7 @@ class _LoginPageState extends State<LoginPage> {
     });
 
     try {
-      const String url = 'http://192.168.1.10:8000/api/users/login/';
+      const String url = 'http://10.0.2.2:8000/api/users/login/';
 
       final response = await http.post(
         Uri.parse(url),
@@ -40,8 +42,12 @@ class _LoginPageState extends State<LoginPage> {
       final data = json.decode(response.body);
 
       if (response.statusCode == 200 && data['success'] == true) {
+       // int userId = data['user_id'];
+        // Stocker l'ID utilisateur
+       // SharedPreferences prefs = await SharedPreferences.getInstance();
+        //await prefs.setInt('user_id', userId);
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Login successful')),
+           const SnackBar(content: Text('Login successful')),
         );
 
         Navigator.pushReplacementNamed(context, '/chat');
